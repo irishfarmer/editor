@@ -18,6 +18,8 @@ public class MainEditorForm extends javax.swing.JFrame {
     /*
     * MainEditorForm member variables
     */
+    private int tileWidth = 64;
+    private int tileHeight = 64;
     private String tilesetPath;
     private TileLoadForm load;
     private ImageIcon buffer = new ImageIcon("C:\\Users\\AAFES\\Desktop\\editorbuffer.png");
@@ -38,19 +40,20 @@ public class MainEditorForm extends javax.swing.JFrame {
         // Create the abstract image of the tileset from the file the user choose
         tileset = new ImageIcon(tilesetPath);
         
-        // Set the backbuffer of the main editor pane so the user has something to draw ons
+        // Set the backbuffer of the main editor pane so the user has something to draw on
         editorBuffer.setIcon(buffer);
         editorBuffer.setText("");
                 
-        // Ensure that the image is the proper size (multiple of 64x64)
-        if(tileset.getIconHeight() % 64 != 0 && tileset.getIconWidth() % 64 != 0) {
-            JOptionPane.showMessageDialog(this, "The image height and width must be multiples of 64 pixels.", 
+        // Ensure that the image is the proper size (multiple of tileWidth x tileHeight)
+        if(tileset.getIconHeight() % tileHeight != 0 && tileset.getIconWidth() % tileWidth != 0) {
+            JOptionPane.showMessageDialog(this, "The image height and width must be multiples of " + tileWidth + " pixels.", 
                     "Image Size Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         
         // Show the image in the tileset pane
         tileImage.setIcon(tileset);
+        gridButton.setEnabled(true);
         tileImage.setText(""); 
     }
     
@@ -82,6 +85,8 @@ public class MainEditorForm extends javax.swing.JFrame {
         jToggleButton2 = new javax.swing.JToggleButton();
         jToggleButton3 = new javax.swing.JToggleButton();
         jToggleButton4 = new javax.swing.JToggleButton();
+        gridButton = new javax.swing.JToggleButton();
+        gridLabel = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem7 = new javax.swing.JMenuItem();
@@ -119,6 +124,7 @@ public class MainEditorForm extends javax.swing.JFrame {
 
         jLabel1.setText("Layers:");
 
+        tilePane.setBorder(null);
         tilePane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
         tileImage.setText("Load a Tileset...");
@@ -170,6 +176,16 @@ public class MainEditorForm extends javax.swing.JFrame {
         buttonGroup1.add(jToggleButton4);
         jToggleButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/evtlyr.png"))); // NOI18N
         jToggleButton4.setToolTipText("Event Layer");
+
+        gridButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/grid.png"))); // NOI18N
+        gridButton.setEnabled(false);
+        gridButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                gridButtonMousePressed(evt);
+            }
+        });
+
+        gridLabel.setText("Grid:");
 
         jMenu1.setText("File");
 
@@ -236,14 +252,17 @@ public class MainEditorForm extends javax.swing.JFrame {
                         .addComponent(jToggleButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(tilePane, javax.swing.GroupLayout.PREFERRED_SIZE, 351, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(mainEditorPane)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(pencilButton, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(bucketButton, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 371, Short.MAX_VALUE))
-                    .addComponent(mainEditorPane))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 305, Short.MAX_VALUE)
+                        .addComponent(gridLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(gridButton, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -261,7 +280,9 @@ public class MainEditorForm extends javax.swing.JFrame {
                     .addComponent(jToggleButton2)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                         .addComponent(jLabel2)
-                        .addComponent(jToggleButton4)))
+                        .addComponent(jToggleButton4))
+                    .addComponent(gridButton)
+                    .addComponent(gridLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(tilePane)
@@ -271,6 +292,7 @@ public class MainEditorForm extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+    
     // If user selects "Exit" from the file menu, then this triggers
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
         System.exit(0);
@@ -303,25 +325,13 @@ public class MainEditorForm extends javax.swing.JFrame {
         // Grab the mouse position relative to the main editor buffer
         Point mousePos = evt.getPoint();
         
-        // Convert the icon to a bufferedimage of the same dimensions so you can easily manipulate it
-        BufferedImage img = new BufferedImage(buffer.getIconHeight(), buffer.getIconWidth(), BufferedImage.TYPE_INT_ARGB);
-        Graphics g = img.createGraphics();
-        g.drawImage(buffer.getImage(), 0, 0, null);
+        // Draw the tile at the point the user clicked
+        ImageIcon ii = (singleSlice != null) ? ImageHelper.drawImageToIcon(buffer, singleSlice, mousePos) 
+                : ImageHelper.drawImageToIcon(buffer, multiSlice, mousePos);
         
-        // Draw the tile to the main editor buffer image (BufferedImage)
-        if (singleSlice != null) {
-            g.drawImage(singleSlice, mousePos.x - (mousePos.x % 64), mousePos.y - (mousePos.y % 64), null);
-        } else {
-            g.drawImage(multiSlice, mousePos.x - (mousePos.x % 64), mousePos.y- (mousePos.y % 64), null);
-        }
-       
-        
-        // Now take the modified image and set it back to the original image
-        buffer.setImage(img);
-        
-        // Finally, set the modified image to the main editor pane so the user can see it
-        editorBuffer.setIcon(buffer);
-        mainEditorPane.repaint(); // Force a redraw so the changes show up
+        // FSet the modified image to the main editor pane so the user can see it
+        editorBuffer.setIcon(ii);
+        mainEditorPane.repaint(); // Force a redraw so the changes show up immediately
     }//GEN-LAST:event_editorBufferMousePressed
 
     // This is trigger when the user mouse clicks on a tile
@@ -329,47 +339,32 @@ public class MainEditorForm extends javax.swing.JFrame {
         // Do nothing until the user loads a tileset
         if (tileset == null) { return; }
         
+        // On the first click, the user begins the boundingBox (dragging will define the second corner)
         boundingBox.begin = evt.getPoint();
         
+        // If the user has not dragged the mouse to finish creating the boundingBox
         if (boundingBox.end == null) {         
             // Grab the mouse position relative to the image
             Point mousePos = evt.getPoint();
-
-            // Convert the tileset icon to a buffered image of the same dimensions so you can easily manipulate it
-            BufferedImage img = new BufferedImage(tileset.getIconWidth(), tileset.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
-            Graphics g = img.createGraphics();
-            g.drawImage(new ImageIcon(tilesetPath).getImage(), 0, 0, null);
-
-            // Use the magic of math to grab the tile the user clicked on and save it to be used elsewhere
-            singleSlice = img.getSubimage(mousePos.x - (mousePos.x % 64), 
-                                        mousePos.y - (mousePos.y % 64), 64, 64);
             
-            // Set the multiSlice to null so that we know we're drawing a single image
+            // Retrieve the single tile the user selected as a BufferedImage
+            singleSlice = ImageHelper.getIconSubimage(new ImageIcon(tilesetPath), mousePos, tileWidth, tileHeight);
+            
+            // Set the multiSlice to null so that we know the user selected a single tile
             multiSlice = null;
-
-            // Create the select box image
-            BufferedImage selectBox = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
-            g = selectBox.createGraphics();
-            g.drawImage(selector.getImage(),0,0, null);
-
-            // Now retreive the raw tileset image
-            BufferedImage newTiles = new BufferedImage(tileset.getIconWidth(), tileset.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
-            g = newTiles.createGraphics();
-            g.drawImage(new ImageIcon(tilesetPath).getImage(), 0, 0, null);
-
-            // Finally, draw the selector image onto the tileset image
-            g.drawImage(selectBox, mousePos.x - (mousePos.x % 64), mousePos.y - (mousePos.y % 64), null);
-
-            // Set the modified tileset as the tileset image
-            tileset.setImage(newTiles);
+            
+            // Now draw the select box icon onto the tile the user selected 
+            // Draw it on the raw tileset icon (which removes the old select box)
+            ImageIcon ii = ImageHelper.drawIconToIcon(new ImageIcon(tilesetPath), selector, mousePos);
 
             // Now send the modified image back to the tileset pane
-            tileImage.setIcon(tileset);
+            //tileImage.setIcon(tileset);
+            tileImage.setIcon(ii);
             tilePane.repaint();
         }
     }//GEN-LAST:event_tileImageMousePressed
 
-    // This function is triggered if the user draws a "Swath" of tiles over the main editor pane
+    // This function is triggered if the user moves the mouse with the mouse button pressed
     private void editorBufferMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_editorBufferMouseDragged
         // If the user hasn't selected a tile, then clicking on the main editor pane should do nothing
         if (singleSlice == null && multiSlice == null) { 
@@ -379,29 +374,22 @@ public class MainEditorForm extends javax.swing.JFrame {
         // Grab the mouse position relative to the map image buffer
         Point mousePos = evt.getPoint();
         
-        // Convert the buffer icon to a buffered image of the same dimensions so you can easily manipulate it
-        BufferedImage img = new BufferedImage(buffer.getIconHeight(), buffer.getIconWidth(), BufferedImage.TYPE_INT_ARGB);
-        Graphics g = img.createGraphics();
-        g.drawImage(buffer.getImage(), 0, 0, null);
+        // Draw the selected tile(s) to the main editor buffer
+        ImageIcon ii = (singleSlice == null) ? ImageHelper.drawImageToIcon(buffer, multiSlice, mousePos) 
+                : ImageHelper.drawImageToIcon(buffer, singleSlice, mousePos);
         
-        // Draw the tile to the main editor buffer image bufferedimage
-        if (singleSlice == null) {
-            g.drawImage(multiSlice, mousePos.x - (mousePos.x % 64), mousePos.y - (mousePos.y % 64), null);
-        } else {
-            g.drawImage(singleSlice, mousePos.x - (mousePos.x % 64), mousePos.y - (mousePos.y % 64), null);
-        }
-        // Now take the modified image set it back to the original image
-        buffer.setImage(img);
-        
-        // Finally, set the modified image to the main editor pane so the user can see it and force a redraw of the pane
-        editorBuffer.setIcon(buffer);
+        // Finally, set the modified image to the main editor pane so the user can see it
+        editorBuffer.setIcon(ii);
         mainEditorPane.repaint(); // Force a redraw so the changes show up
     }//GEN-LAST:event_editorBufferMouseDragged
 
     // Triggered if the user drags the mouse to select multiple tiles
     private void tileImageMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tileImageMouseDragged
+        
+        // Do nothing until the user selects a tileset
         if (tileset == null) { return; }
         
+        // This will define the area of tiles the user selected
         boundingBox.end = evt.getPoint();
         
         // Set the bounding box to the edges of the selected tiles
@@ -412,48 +400,50 @@ public class MainEditorForm extends javax.swing.JFrame {
         lower.x = Math.min(boundingBox.end.x, boundingBox.begin.x);
         lower.y = Math.min(boundingBox.end.y, boundingBox.begin.y);
         
-        width = higher.x + (64 - (higher.x % 64)) - (lower.x - (lower.x % 64));
-        height = higher.y + (64 - (higher.y % 64)) - (lower.y - (lower.y % 64));
-
-        BufferedImage selectors = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-        // Create the image of the selectors
-        Graphics graphics = selectors.createGraphics();
-        for (int idx = 0; idx < selectors.getWidth() / 64; idx++) {
-            for (int iidx = 0; iidx < selectors.getHeight() / 64; iidx++) {
-                graphics.drawImage(selector.getImage(), idx * 64, iidx * 64, null);
-            }
-        }
-
-        // Now retreive the raw tileset image
-        BufferedImage rawTiles = new BufferedImage(tileset.getIconWidth(), tileset.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
-        graphics = rawTiles.createGraphics();
-        graphics.drawImage(new ImageIcon(tilesetPath).getImage(), 0, 0, null);
+        Point originPoint = new Point(lower.x - (lower.x % tileWidth), lower.y - (lower.y % tileHeight));
         
-        // Now grab the tiles that were selected and store them for later use
-        multiSlice = rawTiles.getSubimage(lower.x - (lower.x % 64), 
-                        lower.y - (lower.y % 64), width, height);     
+        // Make sure the width and height encompass the tiles
+        width = higher.x + (tileWidth - (higher.x % tileWidth)) - originPoint.x;
+        height = higher.y + (tileHeight - (higher.y % tileHeight)) - originPoint.y;
+
+        // This will store the image of the select boxes to highlight the tiles the user selected
+        BufferedImage selectors = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        
+        // Create the image of the selectors
+        selectors = ImageHelper.drawIconToImageRepeatedly(selectors, selector);
+        
+        // Grab the tiles the user selected and store them for later use
+        multiSlice = ImageHelper.getIconSubimage(new ImageIcon(tilesetPath), originPoint, width, height);
         
         // Set the single slice to null so that we know we're drawing multiple tiles
         singleSlice = null;
+        
+        // Now draw the selectors image onto the tileset image
+        ImageIcon ii = ImageHelper.drawImageToIcon(new ImageIcon(tilesetPath), selectors, originPoint);
 
-        // Now retreive the raw tileset image again
-        BufferedImage newTiles = new BufferedImage(tileset.getIconWidth(), tileset.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
-        graphics = newTiles.createGraphics();
-        graphics.drawImage(new ImageIcon(tilesetPath).getImage(), 0, 0, null);
-
-        // Finally, draw the selector image onto the tileset image
-        graphics.drawImage(selectors, lower.x - (lower.x % 64), lower.y - (lower.y % 64), null);
-
-        // Set the modified tileset as the tileset image
-        tileset.setImage(newTiles);
-
-        // Now send the modified image back to the tileset pane
-        tileImage.setIcon(tileset);
+        // Finally send the modified image back to the tileset pane
+        tileImage.setIcon(ii);
         tilePane.repaint();
 
         boundingBox.end = null;
     }//GEN-LAST:event_tileImageMouseDragged
+
+    private void gridButtonMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_gridButtonMousePressed
+        // If this button is not active then do nothing
+        if (!gridButton.isEnabled()) { return; }
+        
+        // isSelected will be true before you click to deselect the button
+        if (!gridButton.isSelected()) {
+            
+            // Draw the gridlines onto the editor buffer
+            ImageIcon ii = ImageHelper.drawIconToIconRepeatedly(buffer, new ImageIcon(getClass().getResource("gridlines.png")));
+            
+            // Finally set the icon back to the editor so the user can see it
+            editorBuffer.setIcon(ii);
+            // Force a redraw so that it shows up immediately
+            editorBuffer.repaint();
+        }
+    }//GEN-LAST:event_gridButtonMousePressed
 
     public static void main(String args[]) {
         /*
@@ -500,6 +490,8 @@ public class MainEditorForm extends javax.swing.JFrame {
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JLabel editorBuffer;
     private javax.swing.JMenuItem exitMenuItem;
+    private javax.swing.JToggleButton gridButton;
+    private javax.swing.JLabel gridLabel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JMenu jMenu1;

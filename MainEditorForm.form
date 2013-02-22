@@ -133,15 +133,18 @@
                   <Component id="tilePane" min="-2" pref="351" max="-2" attributes="0"/>
               </Group>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" attributes="0">
+                  <Component id="mainEditorPane" alignment="0" max="32767" attributes="0"/>
+                  <Group type="102" alignment="0" attributes="0">
                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="pencilButton" min="-2" pref="38" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="bucketButton" min="-2" pref="41" max="-2" attributes="0"/>
-                      <EmptySpace pref="371" max="32767" attributes="0"/>
+                      <EmptySpace pref="305" max="32767" attributes="0"/>
+                      <Component id="gridLabel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="gridButton" min="-2" pref="29" max="-2" attributes="0"/>
                   </Group>
-                  <Component id="mainEditorPane" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -165,6 +168,8 @@
                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                       <Component id="jToggleButton4" min="-2" max="-2" attributes="0"/>
                   </Group>
+                  <Component id="gridButton" alignment="0" min="-2" max="-2" attributes="0"/>
+                  <Component id="gridLabel" alignment="0" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
@@ -204,6 +209,9 @@
     </Component>
     <Container class="javax.swing.JScrollPane" name="tilePane">
       <Properties>
+        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+          <Border info="null"/>
+        </Property>
         <Property name="verticalScrollBarPolicy" type="int" value="22"/>
       </Properties>
 
@@ -305,6 +313,22 @@
           <Image iconType="3" name="/evtlyr.png"/>
         </Property>
         <Property name="toolTipText" type="java.lang.String" value="Event Layer"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JToggleButton" name="gridButton">
+      <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/grid.png"/>
+        </Property>
+        <Property name="enabled" type="boolean" value="false"/>
+      </Properties>
+      <Events>
+        <EventHandler event="mousePressed" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="gridButtonMousePressed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JLabel" name="gridLabel">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Grid:"/>
       </Properties>
     </Component>
   </SubComponents>
